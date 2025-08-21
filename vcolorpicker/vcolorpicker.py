@@ -22,7 +22,7 @@ from .img import *
 
 class ColorPicker(QDialog):
 
-    def __init__(self, lightTheme: bool = False, useAlpha: bool = False):
+    def __init__(self, lightTheme: bool = False, useAlpha: bool = False, alwaysOnTop: bool = False):
         """Create a new ColorPicker instance.
 
         :param lightTheme: If the UI should be light themed.
@@ -53,6 +53,10 @@ class ColorPicker(QDialog):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setWindowTitle("Color Picker")
+
+        # Make Always On Top
+        if alwaysOnTop:
+            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
 
         # Add DropShadow
         self.shadow = QGraphicsDropShadowEffect(self)
@@ -108,7 +112,7 @@ class ColorPicker(QDialog):
         self.setRGB(lc)
         self.rgbChanged()
         r,g,b = lc
-        self.ui.lastcolor_vis.setStyleSheet(f"background-color: rgb({r},{g},{b})")
+        self.ui.lastcolor_vis.setStyleSheet(f"background-color: {self.to_whole_css_rgb((r,g,b))};")
 
         if self.exec_():
             r, g, b = hsv2rgb(self.color)
@@ -121,12 +125,12 @@ class ColorPicker(QDialog):
 
     # Update Functions
     def hsvChanged(self):
-        h,s,v = (100 - self.ui.hue_selector.y() / 1.85, (self.ui.selector.x() + 6) / 2.0, (194 - self.ui.selector.y()) / 2.0)
+        h,s,v = (100 - (self.ui.hue_selector.y() / 1.85), (self.ui.selector.x() + 6) / 2.0, (194 - self.ui.selector.y()) / 2.0)
         r,g,b = hsv2rgb(h,s,v)
         self.color = (h,s,v)
         self.setRGB((r,g,b))
         self.setHex(hsv2hex(self.color))
-        self.ui.color_vis.setStyleSheet(f"background-color: rgb({r},{g},{b})")
+        self.ui.color_vis.setStyleSheet(f"background-color: {self.to_whole_css_rgb((r,g,b))};")
         self.ui.color_view.setStyleSheet(f"border-radius: 5px;background-color: qlineargradient(x1:1, x2:0, stop:0 hsl({h}%,100%,50%), stop:1 #fff);")
 
     def rgbChanged(self):
@@ -146,7 +150,7 @@ class ColorPicker(QDialog):
         self.color = rgb2hsv(r,g,b)
         self.setHSV(self.color)
         self.setHex(rgb2hex((r,g,b)))
-        self.ui.color_vis.setStyleSheet(f"background-color: rgb({r},{g},{b})")
+        self.ui.color_vis.setStyleSheet(f"background-color: {self.to_whole_css_rgb((r,g,b))};")
 
     def hexChanged(self):
         hex = self.ui.hex.text()
@@ -159,7 +163,7 @@ class ColorPicker(QDialog):
         self.color = hex2hsv(hex)
         self.setHSV(self.color)
         self.setRGB((r, g, b))
-        self.ui.color_vis.setStyleSheet(f"background-color: rgb({r},{g},{b})")
+        self.ui.color_vis.setStyleSheet(f"background-color: {self.to_whole_css_rgb((r,g,b))};")
 
     def alphaChanged(self):
         alpha = self.i(self.ui.alpha.text())
@@ -235,6 +239,10 @@ class ColorPicker(QDialog):
         if g>255: g=255
         if b>255: b=255
         return r, g, b
+    
+    def to_whole_css_rgb(self, rgb):
+        r, g, b = rgb
+        return f"rgb({round(r)},{round(g)},{round(b)})" # needs to adhere to CSS 2.1
 
 
 # Color Utility
